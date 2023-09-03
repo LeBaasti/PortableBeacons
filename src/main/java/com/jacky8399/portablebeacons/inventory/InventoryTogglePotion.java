@@ -2,6 +2,7 @@ package com.jacky8399.portablebeacons.inventory;
 
 import com.jacky8399.portablebeacons.BeaconEffects;
 import com.jacky8399.portablebeacons.Config;
+import com.jacky8399.portablebeacons.PortableBeacons;
 import com.jacky8399.portablebeacons.events.Inventories;
 import com.jacky8399.portablebeacons.utils.ItemUtils;
 import com.jacky8399.portablebeacons.utils.PotionEffectUtils;
@@ -92,6 +93,7 @@ public class InventoryTogglePotion implements InventoryProvider {
     }
 
     private static final String REMOVE_POTION_PERM = "portablebeacons.command.item.remove";
+    private static final String BYPASS_MAX_AMPLIFIER_LIMIT = "portablebeacons.command.item.remove";
 
     @Override
     public void populate(Player player, InventoryAccessor inventory) {
@@ -229,6 +231,10 @@ public class InventoryTogglePotion implements InventoryProvider {
             var cursor = e.getCursor();
             if (cursor == null || !(cursor.getItemMeta() instanceof PotionMeta potionMeta))
                 return;
+            if(!potionMeta.isUnbreakable()) {
+                playCantEdit(e);
+                return;
+            }
             var basePotion = potionMeta.getBasePotionData();
             if (basePotion.getType().getEffectType() != null) {
                 PotionEffectType potion = basePotion.getType() == PotionType.TURTLE_MASTER ?
@@ -239,7 +245,23 @@ public class InventoryTogglePotion implements InventoryProvider {
             }
             if (potionMeta.hasCustomEffects()) {
                 for (var potionEffect : potionMeta.getCustomEffects()) {
+                    if(!clicked.hasPermission(BYPASS_MAX_AMPLIFIER_LIMIT)) {
+                        int maxDefaultAmplifier = PortableBeacons.INSTANCE.getConfig().getInt("effects.default.max-amplifier");
+                        int maxPotionAmplifier = PortableBeacons.INSTANCE.getConfig().getInt("effects."+ potionEffect.getType() +".max-amplifier");
+                        int maxAmplifier = Math.max(maxPotionAmplifier, maxDefaultAmplifier);
+                        int mergedAmplifier = effects.getOrDefault(potionEffect.getType(), 0) + potionEffect.getAmplifier();
+                        if(mergedAmplifier > maxAmplifier) {
+                            playCantEdit(e);
+                            continue;
+                        }
+                        potionMeta.removeCustomEffect(potionEffect.getType());
+                        cursor.setItemMeta(potionMeta);
+                    }
                     effects.merge(potionEffect.getType(), potionEffect.getAmplifier(), Integer::sum);
+                }
+                if(!potionMeta.hasCustomEffects()) {
+                    clicked.setItemOnCursor(new ItemStack(Material.AIR));
+
                 }
             }
             playEdit(e);
