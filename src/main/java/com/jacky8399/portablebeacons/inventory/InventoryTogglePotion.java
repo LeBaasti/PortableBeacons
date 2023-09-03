@@ -6,8 +6,10 @@ import com.jacky8399.portablebeacons.events.Inventories;
 import com.jacky8399.portablebeacons.utils.ItemUtils;
 import com.jacky8399.portablebeacons.utils.PotionEffectUtils;
 import com.jacky8399.portablebeacons.utils.TextUtils;
+import me.clip.placeholderapi.libs.kyori.adventure.text.Component;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.KeybindComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -89,10 +91,6 @@ public class InventoryTogglePotion implements InventoryProvider {
         return Math.min(6, effects.size() / 9 + 3);
     }
 
-    private static final String ADD_POTION_PERM = "portablebeacons.command.item.add";
-    private static final String REMOVE_POTION_PERM = "portablebeacons.command.item.remove";
-
-
     @Override
     public void populate(Player player, InventoryAccessor inventory) {
         for (int i = 0; i < 9; i++) {
@@ -116,11 +114,9 @@ public class InventoryTogglePotion implements InventoryProvider {
                     inventory.requestRefresh(player);
                 });
             } else {
-                boolean canAddPotions = player.hasPermission(ADD_POTION_PERM);
-                boolean canRemovePotions = player.hasPermission(REMOVE_POTION_PERM);
-                if (i == 0 && (canAddPotions || canRemovePotions)) {
+                if (i == 0) {
                     // edit potion effects
-                    var stack = getPotionManagerDisplay(canAddPotions, canRemovePotions);
+                    var stack = getPotionManagerDisplay();
                     inventory.set(0, stack, addPotionEffects(inventory));
                 } else if (i == 8 && Config.nerfExpLevelsPerMinute != 0) {
                     inventory.set(8, expStack);
@@ -149,15 +145,14 @@ public class InventoryTogglePotion implements InventoryProvider {
     }
 
     @NotNull
-    private static ItemStack getPotionManagerDisplay(boolean canAddPotions, boolean canRemovePotions) {
+    private static ItemStack getPotionManagerDisplay() {
         var stack = new ItemStack(Material.WRITABLE_BOOK);
         var meta = stack.getItemMeta();
-        meta.setDisplayName(ChatColor.YELLOW + "Edit potion effects (Admin)");
+        //changed displayName from "Edit potion effects (Admin)" TO "Edit potion effects"
+        meta.setDisplayName(ChatColor.YELLOW + "Edit potion effects");
         var lore = new ArrayList<String>();
-        if (canAddPotions)
-            lore.add(ChatColor.GREEN + "Add potion effects by putting potions here");
-        if (canRemovePotions)
-            lore.add(ChatColor.RED + "Remove potion effects by pressing the drop key in the UI");
+        lore.add(ChatColor.GREEN + "Add potion effects by putting potions here");
+        lore.add(ChatColor.RED + "Remove potion effects by pressing the drop key in the UI");
         meta.setLore(lore);
         stack.setItemMeta(meta);
         return stack;
@@ -211,10 +206,6 @@ public class InventoryTogglePotion implements InventoryProvider {
                 if (!disabledEffects.add(type))
                     disabledEffects.remove(type);
             } else {
-                if (!clicked.hasPermission(REMOVE_POTION_PERM)) {
-                    playCantEdit(e);
-                    return;
-                }
                 effects.remove(type);
                 disabledEffects.remove(type);
             }
@@ -227,8 +218,6 @@ public class InventoryTogglePotion implements InventoryProvider {
     private Consumer<InventoryClickEvent> addPotionEffects(InventoryAccessor inventory) {
         return e -> {
             Player clicked = (Player) e.getWhoClicked();
-            if (!clicked.hasPermission(ADD_POTION_PERM))
-                return;
 
             // grow inventory if needed
             int oldRows = getRows();
