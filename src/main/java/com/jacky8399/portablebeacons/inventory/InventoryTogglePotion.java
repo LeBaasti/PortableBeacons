@@ -7,10 +7,8 @@ import com.jacky8399.portablebeacons.events.Inventories;
 import com.jacky8399.portablebeacons.utils.ItemUtils;
 import com.jacky8399.portablebeacons.utils.PotionEffectUtils;
 import com.jacky8399.portablebeacons.utils.TextUtils;
-import me.clip.placeholderapi.libs.kyori.adventure.text.Component;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.KeybindComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -93,7 +91,7 @@ public class InventoryTogglePotion implements InventoryProvider {
     }
 
     private static final String REMOVE_POTION_PERM = "portablebeacons.command.item.remove";
-    private static final String BYPASS_MAX_AMPLIFIER_LIMIT = "portablebeacons.command.item.remove";
+    private static final String BYPASS_MAX_AMPLIFIER_LIMIT_PERM = "portablebeacons.bypass.max.aplifier.limit";
 
     @Override
     public void populate(Player player, InventoryAccessor inventory) {
@@ -245,7 +243,7 @@ public class InventoryTogglePotion implements InventoryProvider {
             }
             if (potionMeta.hasCustomEffects()) {
                 for (var potionEffect : potionMeta.getCustomEffects()) {
-                    if(!clicked.hasPermission(BYPASS_MAX_AMPLIFIER_LIMIT)) {
+                    if(!clicked.hasPermission(BYPASS_MAX_AMPLIFIER_LIMIT_PERM)) {
                         int maxDefaultAmplifier = PortableBeacons.INSTANCE.getConfig().getInt("effects.default.max-amplifier");
                         int maxPotionAmplifier = PortableBeacons.INSTANCE.getConfig().getInt("effects."+ potionEffect.getType() +".max-amplifier");
                         int maxAmplifier = Math.max(maxPotionAmplifier, maxDefaultAmplifier);
