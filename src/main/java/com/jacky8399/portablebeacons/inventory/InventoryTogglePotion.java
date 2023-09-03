@@ -245,7 +245,7 @@ public class InventoryTogglePotion implements InventoryProvider {
                 for (var potionEffect : potionMeta.getCustomEffects()) {
                     if(!clicked.hasPermission(BYPASS_MAX_AMPLIFIER_LIMIT_PERM)) {
                         int maxDefaultAmplifier = PortableBeacons.INSTANCE.getConfig().getInt("effects.default.max-amplifier");
-                        int maxPotionAmplifier = PortableBeacons.INSTANCE.getConfig().getInt("effects."+ potionEffect.getType() +".max-amplifier");
+                        int maxPotionAmplifier = PortableBeacons.INSTANCE.getConfig().getInt("effects."+ potionEffect.getType().getName().toLowerCase() +".max-amplifier");
                         int maxAmplifier = Math.max(maxPotionAmplifier, maxDefaultAmplifier);
                         int mergedAmplifier = effects.getOrDefault(potionEffect.getType(), 0) + potionEffect.getAmplifier();
                         if(mergedAmplifier > maxAmplifier) {
