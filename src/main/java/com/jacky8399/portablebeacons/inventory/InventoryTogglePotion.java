@@ -91,6 +91,8 @@ public class InventoryTogglePotion implements InventoryProvider {
         return Math.min(6, effects.size() / 9 + 3);
     }
 
+    private static final String REMOVE_POTION_PERM = "portablebeacons.command.item.remove";
+
     @Override
     public void populate(Player player, InventoryAccessor inventory) {
         for (int i = 0; i < 9; i++) {
@@ -114,9 +116,10 @@ public class InventoryTogglePotion implements InventoryProvider {
                     inventory.requestRefresh(player);
                 });
             } else {
+                boolean canRemovePotions = player.hasPermission(REMOVE_POTION_PERM);
                 if (i == 0) {
                     // edit potion effects
-                    var stack = getPotionManagerDisplay();
+                    var stack = getPotionManagerDisplay(canRemovePotions);
                     inventory.set(0, stack, addPotionEffects(inventory));
                 } else if (i == 8 && Config.nerfExpLevelsPerMinute != 0) {
                     inventory.set(8, expStack);
@@ -145,14 +148,14 @@ public class InventoryTogglePotion implements InventoryProvider {
     }
 
     @NotNull
-    private static ItemStack getPotionManagerDisplay() {
+    private static ItemStack getPotionManagerDisplay(boolean canRemovePotions) {
         var stack = new ItemStack(Material.WRITABLE_BOOK);
         var meta = stack.getItemMeta();
         //changed displayName from "Edit potion effects (Admin)" TO "Edit potion effects"
         meta.setDisplayName(ChatColor.YELLOW + "Edit potion effects");
         var lore = new ArrayList<String>();
         lore.add(ChatColor.GREEN + "Add potion effects by putting potions here");
-        lore.add(ChatColor.RED + "Remove potion effects by pressing the drop key in the UI");
+        if(canRemovePotions) lore.add(ChatColor.RED + "Remove potion effects by pressing the drop key in the UI");
         meta.setLore(lore);
         stack.setItemMeta(meta);
         return stack;
@@ -206,6 +209,7 @@ public class InventoryTogglePotion implements InventoryProvider {
                 if (!disabledEffects.add(type))
                     disabledEffects.remove(type);
             } else {
+                if(!clicked.hasPermission(REMOVE_POTION_PERM)) return;
                 effects.remove(type);
                 disabledEffects.remove(type);
             }
